@@ -28,15 +28,28 @@ object KuduWriteHDFS {
     val kuduContext = sparkSession.sparkContext.broadcast(new KuduContext("nn01"))
 
     import sparkSession.implicits._
-    kuduContext.value.kuduRDD(sparkSession.sparkContext, "impala::position.CTTIC_VehiclePosition_" + args(0)).
+    kuduContext.value.kuduRDD(sparkSession.sparkContext, "impala::position.CTTIC_VehiclePosition_" + args(0),
+      Seq("vehicleno", "platecolor", "positiontime", "accesscode", "city", "curaccesscode",
+        "trans", "updatetime", "encrypt", "lon", "lat", "vec1", "vec2", "vec3", "direction",
+        "altitude", "state", "alarm", "reserved", "errorcode", "roadcode")).
       map(record=> {
-        val recordArray = record.toString().split(",")
+        val recordArray = record.mkString(",").split(",")
+        /*
+        println(recordArray(0), recordArray(1).toInt, recordArray(2).toLong,
+          recordArray(3).toInt, recordArray(4).toInt, recordArray(5).toInt, recordArray(6).toInt,
+          recordArray(7).toLong, recordArray(8).toInt, recordArray(9).toInt, recordArray(10).toInt,
+          recordArray(11).toInt, recordArray(12).toInt, recordArray(13).toInt, recordArray(14).toInt,
+          recordArray(15).toInt, recordArray(16).toLong, recordArray(17).toLong, if(recordArray(18).length == 0) " ",
+          recordArray(19), recordArray(20).toInt)
+        */
         TableStructureVehiclePosition(recordArray(0), recordArray(1).toInt, recordArray(2).toLong,
           recordArray(3).toInt, recordArray(4).toInt, recordArray(5).toInt, recordArray(6).toInt,
           recordArray(7).toLong, recordArray(8).toInt, recordArray(9).toInt, recordArray(10).toInt,
           recordArray(11).toInt, recordArray(12).toInt, recordArray(13).toInt, recordArray(14).toInt,
-          recordArray(15).toInt, recordArray(16).toLong, recordArray(17).toLong, recordArray(18),
+          recordArray(15).toInt, recordArray(16).toLong, recordArray(17).toLong,
+          if(recordArray(18).length == 0) " " else recordArray(18),
           recordArray(19), recordArray(20).toInt)
+
       }).toDF().write.mode("Append").parquet("hdfs://nameservice1/VP/VehiclePosition_" + args(0))
   }
 
